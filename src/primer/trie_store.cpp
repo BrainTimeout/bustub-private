@@ -24,10 +24,18 @@ auto TrieStore::Get(std::string_view key) -> std::optional<ValueGuard<T>> {
   // Pseudo-code:
   // (1) Take the root lock, get the root, and release the root lock. Don't lookup the value in the
   //     trie while holding the root lock.
+  std::unique_lock<std::mutex> lock(root_lock_);
+  
+  Trie root = this->root_;
+
+  lock.unlock();  // 释放锁
   // (2) Lookup the value in the trie.
+
+  const T* pValue = root.Get<T>(key);
   // (3) If the value is found, return a ValueGuard object that holds a reference to the value and the
   //     root. Otherwise, return std::nullopt.
-  throw NotImplementedException("TrieStore::Get is not implemented.");
+  if(pValue == nullptr) return std::nullopt;
+  else return ValueGuard(root,*pValue);
 }
 
 /**
@@ -38,14 +46,46 @@ template <class T>
 void TrieStore::Put(std::string_view key, T value) {
   // You will need to ensure there is only one writer at a time. Think of how you can achieve this.
   // The logic should be somehow similar to `TrieStore::Get`.
-  throw NotImplementedException("TrieStore::Put is not implemented.");
+  std::unique_lock<std::mutex> write_lock(write_lock_);
+
+  std::unique_lock<std::mutex> root_lock(root_lock_);
+  
+  Trie root = this->root_;
+
+  root_lock.unlock();
+
+  root = root.Put<T>(key,std::move(value));
+
+  root_lock.lock();
+
+  this->root_ = root;
+
+  root_lock.unlock();
+
+  write_lock.unlock();
 }
 
 /** @brief This function will remove the key-value pair from the trie. */
 void TrieStore::Remove(std::string_view key) {
   // You will need to ensure there is only one writer at a time. Think of how you can achieve this.
   // The logic should be somehow similar to `TrieStore::Get`.
-  throw NotImplementedException("TrieStore::Remove is not implemented.");
+  std::unique_lock<std::mutex> write_lock(write_lock_);
+
+  std::unique_lock<std::mutex> root_lock(root_lock_);
+  
+  Trie root = this->root_;
+
+  root_lock.unlock();
+
+  root = root.Remove(key);
+
+  root_lock.lock();
+
+  this->root_ = root;
+
+  root_lock.unlock();
+
+  write_lock.unlock();
 }
 
 // Below are explicit instantiation of template functions.

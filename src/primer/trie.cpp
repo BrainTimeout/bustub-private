@@ -25,6 +25,7 @@ namespace bustub {
 template <class T>
 auto Trie::Get(std::string_view key) const -> const T * {
   std::shared_ptr<const TrieNode> node = root_;
+  if(node == nullptr) return nullptr;
   for(char ch:key){
     auto it = node->children_.find(ch);
     if(it == node->children_.end()) return nullptr;
@@ -97,8 +98,34 @@ auto Trie::Put(std::string_view key, T value) const -> Trie {
  * @return If the key does not exist, return the original trie. Otherwise, returns the new trie.
  */
 auto Trie::Remove(std::string_view key) const -> Trie {
-  throw NotImplementedException("Trie::Remove is not implemented.");
-
+  std::vector<std::shared_ptr<const bustub::TrieNode>> nodeStk;
+  std::shared_ptr<const TrieNode> node = root_;
+  for(char ch:key){
+    auto it = node->children_.find(ch);
+    if(it == node->children_.end()) return *this;
+    else{
+      nodeStk.push_back(node);
+      node = it->second;
+    }
+  }
+  if(node->is_value_node_ == false) return *this;
+  else{
+    if(node->children_.empty()) node = nullptr;
+    else node = std::make_shared<TrieNode>(node->children_);
+    std::shared_ptr<TrieNode> parentNode;
+    for (auto it = key.rbegin(); it != key.rend(); ++it) {
+      char ch = *it;
+      parentNode = std::move(nodeStk.back()->Clone());
+      nodeStk.pop_back();
+      if(node!=nullptr) parentNode->children_[ch] = node;
+      else{
+        if(parentNode->children_.size()<=1&&parentNode->is_value_node_==false) parentNode = nullptr;
+        else parentNode->children_.erase(ch);
+      }
+      node = parentNode;
+    }
+    return Trie(node);
+  } 
   // You should walk through the trie and remove nodes if necessary. If the node doesn't contain a value any more,
   // you should convert it to `TrieNode`. If a node doesn't have children any more, you should remove it.
 }
