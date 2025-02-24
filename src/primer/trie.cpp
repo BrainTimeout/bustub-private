@@ -59,7 +59,7 @@ auto Trie::Put(std::string_view key, T value) const -> Trie {
     if(key.size()==0){
       return Trie(std::make_shared<TrieNodeWithValue<T>>(root_->children_,std::make_shared<T>(std::move(value))));
     }
-    else node = std::move(root_->Clone());
+    else node = root_->Clone();
   }
   else{
     if(key.size()==0){
@@ -74,7 +74,7 @@ auto Trie::Put(std::string_view key, T value) const -> Trie {
     ch = key[i];
     auto it = node->children_.find(ch);
     if(it == node->children_.end()) node->children_[ch] = std::make_shared<TrieNode>();
-    else node->children_[ch] = std::move(it->second->Clone());
+    else node->children_[ch] = it->second->Clone();
     node = std::const_pointer_cast<bustub::TrieNode>(node->children_[ch]);
     i++;
   }
@@ -115,7 +115,7 @@ auto Trie::Remove(std::string_view key) const -> Trie {
     std::shared_ptr<TrieNode> parentNode;
     for (auto it = key.rbegin(); it != key.rend(); ++it) {
       char ch = *it;
-      parentNode = std::move(nodeStk.back()->Clone());
+      parentNode = nodeStk.back()->Clone();
       nodeStk.pop_back();
       if(node!=nullptr) parentNode->children_[ch] = node;
       else{
