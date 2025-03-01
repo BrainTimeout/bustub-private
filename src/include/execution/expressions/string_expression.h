@@ -4,9 +4,9 @@
 //
 // string_expression.h
 //
-// Identification: src/include/expression/string_expression.h
+// Identification: src/include/execution/expressions/string_expression.h
 //
-// Copyright (c) 2015-2023, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -45,8 +45,16 @@ class StringExpression : public AbstractExpression {
   }
 
   auto Compute(const std::string &val) const -> std::string {
-    // TODO(student): implement upper / lower.
-    return {};
+    std::string result;  // 初始化为空字符串
+
+    // 根据 expr_type_ 决定转换类型
+    auto convert_func = (expr_type_ == StringExpressionType::Upper) ? [](unsigned char c) { return std::toupper(c); }
+                                                                    : [](unsigned char c) { return std::tolower(c); };
+
+    // 将转换后的字符逐个添加到 result 中
+    std::transform(val.begin(), val.end(), std::back_inserter(result), convert_func);
+
+    return result;  // 返回转换后的字符串
   }
 
   auto Evaluate(const Tuple *tuple, const Schema &schema) const -> Value override {
