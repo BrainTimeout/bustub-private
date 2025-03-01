@@ -45,8 +45,20 @@ class SkipList {
 
  public:
   /**  @brief Constructs an empty skip list with an optional custom comparison function. */
-  explicit SkipList(const Compare &compare = Compare{}) { UNIMPLEMENTED("TODO(P0): Add implementation."); }
-
+  explicit SkipList(const Compare &compare = Compare{}) 
+  {
+        // 初始化比较函数
+        compare_ = compare;
+        // 创建头节点，初始化高度为 MaxHeight，键值为默认构造的 K（空值）
+        header_ = std::make_shared<SkipNode>(MaxHeight, K{});
+    
+        // 设置跳表的初始高度和大小
+        height_ = 0;   // 初始高度为1
+        size_ = 0;     // 初始为空
+    
+        // 初始化随机数生成器
+        rng_ = std::mt19937(Seed);
+  }
   /**
    * @brief Destructs the skip list.
    *
@@ -128,7 +140,10 @@ SKIPLIST_TEMPLATE_ARGUMENTS struct SkipList<K, Compare, MaxHeight, Seed>::SkipNo
    * @param height The number of links the node will have
    * @param key The key to store in the node (default empty for header)
    */
-  explicit SkipNode(size_t height, K key = K{}) { UNIMPLEMENTED("TODO(P0): Add implementation."); }
+  explicit SkipNode(size_t height, K key = K{}) { 
+        key_ = key;
+        links_ = std::vector<std::shared_ptr<SkipNode>>(height, nullptr);
+  }
 
   auto Height() const -> size_t;
   auto Next(size_t level) const -> std::shared_ptr<SkipNode>;

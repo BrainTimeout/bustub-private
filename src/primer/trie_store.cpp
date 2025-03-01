@@ -25,17 +25,19 @@ auto TrieStore::Get(std::string_view key) -> std::optional<ValueGuard<T>> {
   // (1) Take the root lock, get the root, and release the root lock. Don't lookup the value in the
   //     trie while holding the root lock.
   std::unique_lock<std::mutex> lock(root_lock_);
-  
+
   Trie root = this->root_;
 
   lock.unlock();  // 释放锁
   // (2) Lookup the value in the trie.
 
-  const T* pValue = root.Get<T>(key);
+  const T *pValue = root.Get<T>(key);
   // (3) If the value is found, return a ValueGuard object that holds a reference to the value and the
   //     root. Otherwise, return std::nullopt.
-  if(pValue == nullptr) return std::nullopt;
-  else return ValueGuard(root,*pValue);
+  if (pValue == nullptr)
+    return std::nullopt;
+  else
+    return ValueGuard(root, *pValue);
 }
 
 /**
@@ -49,12 +51,12 @@ void TrieStore::Put(std::string_view key, T value) {
   std::unique_lock<std::mutex> write_lock(write_lock_);
 
   std::unique_lock<std::mutex> root_lock(root_lock_);
-  
+
   Trie root = this->root_;
 
   root_lock.unlock();
 
-  root = root.Put<T>(key,std::move(value));
+  root = root.Put<T>(key, std::move(value));
 
   root_lock.lock();
 
@@ -72,7 +74,7 @@ void TrieStore::Remove(std::string_view key) {
   std::unique_lock<std::mutex> write_lock(write_lock_);
 
   std::unique_lock<std::mutex> root_lock(root_lock_);
-  
+
   Trie root = this->root_;
 
   root_lock.unlock();
